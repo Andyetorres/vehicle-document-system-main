@@ -11,4 +11,5 @@
         private String apellidos;
         private String correoElectronico;
         private String tipoPersona; // C o A
+        private String ubicacion;
     }

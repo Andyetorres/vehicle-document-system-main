@@ -34,7 +34,7 @@ public class JWTAuthtenticationConfig {
                                 .map(GrantedAuthority::getAuthority)
                                 .collect(Collectors.toList()))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 600000)) // 10 min
+                .setExpiration(new Date(System.currentTimeMillis() + 1800000000))
                 .signWith(KEY)
                 .compact();
 

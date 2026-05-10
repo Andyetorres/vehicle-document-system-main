@@ -7,4 +7,5 @@ public interface IPersonaService {
     Persona crearPersona(Persona persona);
     List<Persona> listarTodas();
     Persona actualizar(Long id, Persona datosNuevos);
+    boolean eliminar(Long id);
 }

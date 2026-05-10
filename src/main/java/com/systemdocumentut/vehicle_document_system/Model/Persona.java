@@ -24,4 +24,6 @@ public class Persona {
 
     @Pattern(regexp = "^(C|A)$", message = "C para Conductor, A para Administrativo")
     private String tipoPersona;
+
+    private String ubicacion;
 }
