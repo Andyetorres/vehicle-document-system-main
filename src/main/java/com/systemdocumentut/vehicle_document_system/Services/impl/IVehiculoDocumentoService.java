@@ -11,6 +11,6 @@ public interface IVehiculoDocumentoService {
     
     List<VehiculoDocumento> listarPorVehiculo(Long idVehiculo);
 
-    // DEBES AGREGAR ESTA LÍNEA EXACTAMENTE ASÍ:
+    // Método solicitado para manejo de archivos PDF en Base64
     VehiculoDocumento guardarDocumentoConPdf(Long idVehiculo, Long idDoc, String pdfBase64, String fExp, String fVen);
 }

@@ -9,6 +9,7 @@ import com.systemdocumentut.vehicle_document_system.Model.Config.JwtRequest;
 import com.systemdocumentut.vehicle_document_system.Model.Config.JwtResponse;
 import com.systemdocumentut.vehicle_document_system.Model.Config.JWTAuthtenticationConfig;
 import com.systemdocumentut.vehicle_document_system.Repository.UsuarioRepository;
+import com.systemdocumentut.vehicle_document_system.Model.Usuario;
 
 @RestController
 @RequestMapping("/auth")
@@ -24,23 +25,32 @@ public class JWTAuthenticationController {
     @PostMapping("/authenticate")
     public ResponseEntity<?> login(
             @RequestBody JwtRequest request, 
-            @RequestHeader(value = "APIKey", required = false) String apiKey) {
+            @RequestHeader(value = "X-API-KEY", required = false) String apiKey) {
         
-        // 1. Validar presencia de APIKey en Header
+        // 1. Validar presencia de X-API-KEY en Header (Requerimiento de Seguridad)
         if (apiKey == null || apiKey.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error: El encabezado 'APIKey' es obligatorio.");
+                    .body("Error: El encabezado 'X-API-KEY' es obligatorio para la autenticación.");
         }
 
-        // 2. Buscar por login usando la convención de @EmbeddedId
+        // 2. Buscar usuario por login (usando la estructura de ID compuesto)
         return usuarioRepo.findById_Login(request.getUsername())
             .map(user -> {
-                // 3. Validar Password y APIKey contra la DB
+                
+                // 3. Validar que la persona asociada sea ADMINISTRADOR ('A')
+                // Solo los administrativos pueden acceder al sistema según la regla de negocio.
+                if (!"A".equals(user.getPersona().getTipoPersona())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Acceso denegado: Solo usuarios administrativos pueden iniciar sesión.");
+                }
+
+                // 4. Validar Password (en texto plano según tu lógica actual) y APIKey
                 if (user.getPassword().equals(request.getPassword()) && 
                     user.getApikey().equals(apiKey)) {
                     
-                    // 4. Generar Token con la nueva configuración de seguridad
-                    String token = jwtAuthtenticationConfig.getJWTToken(request.getUsername());
+                    // 5. Generar Token JWT incluyendo el login como subject
+                    String token = jwtAuthtenticationConfig.getJWTToken(user.getId().getLogin());
+                    
                     return ResponseEntity.ok(new JwtResponse(token));
                 }
                 
@@ -48,6 +58,6 @@ public class JWTAuthenticationController {
                         .body("Credenciales incorrectas: Password o APIKey no coinciden.");
             })
             .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Usuario '" + request.getUsername() + "' no encontrado."));
+                    .body("El login '" + request.getUsername() + "' no existe en el sistema."));
     }
 }

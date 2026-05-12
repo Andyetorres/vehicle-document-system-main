@@ -15,7 +15,7 @@ window.initMap = function() {
 
 function cargarDatosServidor(map) {
     // REEMPLAZA ESTE TOKEN SI EXPIRA (Dura aprox 24h según tu log)
-    const tokenDesdePostman = "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJzb2Z0dXRKV1QiLCJzdWIiOiJhZG1pbiIsImF1dGhvcml0aWVzIjpbIlJPTEVfQURNSU4iXSwiaWF0IjoxNzc4NDIwMDE3LCJleHAiOjE3ODAyMjAwMTd9.WGO9D8pJ1vVB_5l3ch2HBGoqnTy4IKBHytxED7minTBr8DNh_kDZOrb1Cx5t0l8syXgUjWoIbHfAZJhlhj2j_g";
+    const tokenDesdePostman = "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJzb2Z0dXRKV1QiLCJzdWIiOiJhZG1pbiIsImF1dGhvcml0aWVzIjpbIlJPTEVfQURNSU4iXSwiaWF0IjoxNzc4NDMwNDc5LCJleHAiOjE3ODAyMzA0Nzl9.gr5gC-7FSU2oqMmRhIzzazSNgkkEq0ZuouveKxD6axY8VERzlLVU9Oj0SSnpHxEVBlscR1F__QY3Pwv93__wjg";
 
     const authHeader = tokenDesdePostman.startsWith("Bearer ") ? tokenDesdePostman : "Bearer " + tokenDesdePostman;
 

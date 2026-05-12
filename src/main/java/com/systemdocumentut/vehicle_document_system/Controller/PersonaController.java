@@ -2,68 +2,86 @@ package com.systemdocumentut.vehicle_document_system.Controller;
 
 import com.systemdocumentut.vehicle_document_system.DTOs.PersonaDTO;
 import com.systemdocumentut.vehicle_document_system.Model.Persona;
-import com.systemdocumentut.vehicle_document_system.Repository.PersonaRepository;
 import com.systemdocumentut.vehicle_document_system.Services.PersonaServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/LaboratorioV1")
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT})public class PersonaController {
-
-    @Autowired
-    private PersonaRepository personaRepo;
+@RequestMapping("/api")
+@CrossOrigin(origins = "*")
+public class PersonaController {
 
     @Autowired
     private PersonaServiceImpl personaService;
 
-        @PutMapping("/{id}")
-        public ResponseEntity<?> actualizarPersona(@PathVariable Long id, @RequestBody Persona personaDetalles) {
-            try {
-                // Ahora 'id' es Long, así que findById(id) funcionará sin quejas
-                Persona persona = personaRepo.findById(id)
-                    .orElseThrow(() -> new Exception("Persona no encontrada con id: " + id));
+    // --- SERVICIOS PROTEGIDOS (Requieren Token + APIKey en el Middleware) ---
 
-            // 2. Actualizamos los campos necesarios
-            persona.setNombres(personaDetalles.getNombres());
-            persona.setApellidos(personaDetalles.getApellidos());
-            persona.setUbicacion(personaDetalles.getUbicacion()); // <--- ESTO ES LO IMPORTANTE
-            persona.setCorreoElectronico(personaDetalles.getCorreoElectronico());
-
-            // 3. Guardamos los cambios
-            personaRepo.save(persona);
-            
-            return ResponseEntity.ok("Persona actualizada correctamente. El Cron detectará el cambio en unos segundos.");
+    /**
+     * POST /api/personas
+     * Crea persona y si es tipo 'A', crea automáticamente el Usuario con nemotecnia.
+     */
+    @PostMapping("/personas")
+    public ResponseEntity<?> crearPersona(@RequestBody Persona persona) {
+        try {
+            Persona nuevaPersona = personaService.crearPersonaConUsuario(persona);
+            return ResponseEntity.ok(nuevaPersona);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error al crear: " + e.getMessage());
         }
     }
 
-    // REQUERIMIENTO: GET - Listar personas (Imagen 1 del profe)
-    @GetMapping("/personas")
-    public List<PersonaDTO> listarTodas() {
-        return personaService.listarTodas().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+    /**
+     * GET /api/personas/{id}
+     * Obtiene datos de una persona específica.
+     */
+    @GetMapping("/personas/{id}")
+    public ResponseEntity<?> obtenerPersona(@PathVariable Long id) {
+        return personaService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // Actualiza el método mapToDTO para que incluya la UBICACION
-    private PersonaDTO mapToDTO(Persona p) {
-        return PersonaDTO.builder()
-                .id(p.getId_persona())
-                .identificacion(p.getIdentificacion())
-                .tipoIdentificacion(p.getTipoIdentificacion())
-                .nombres(p.getNombres())
-                .apellidos(p.getApellidos())
-                .correoElectronico(p.getCorreoElectronico())
-                .tipoPersona(p.getTipoPersona())
-                .ubicacion(p.getUbicacion()) // <--- IMPORTANTE: Agrega esto a tu DTO
-                .build();
+    /**
+     * PUT /api/usuarios/{login}/password
+     * Cambio de contraseña vía Body.
+     */
+    @PutMapping("/usuarios/{login}/password")
+    public ResponseEntity<?> cambiarPassword(@PathVariable String login, @RequestBody Map<String, String> body) {
+        try {
+            String newPassword = body.get("password");
+            personaService.actualizarPassword(login, newPassword);
+            return ResponseEntity.ok("Contraseña actualizada con éxito.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    
+    /**
+     * GET /api/usuarios/{login}/new-apikey
+     * Regenera la APIKey de un usuario.
+     */
+    @GetMapping("/usuarios/{login}/new-apikey")
+    public ResponseEntity<?> regenerarApiKey(@PathVariable String login) {
+        try {
+            String newKey = personaService.regenerarApiKey(login);
+            return ResponseEntity.ok(Map.of("apiKey", newKey));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // --- SERVICIOS PÚBLICOS (Sin Token) ---
+
+    /**
+     * GET /api/public/personas/estadisticas
+     * SELECT tipo_persona, COUNT(*) FROM Persona GROUP BY tipo_persona
+     */
+    @GetMapping("/public/personas/estadisticas")
+    public ResponseEntity<?> obtenerEstadisticas() {
+        return ResponseEntity.ok(personaService.obtenerEstadisticas());
+    }
 }

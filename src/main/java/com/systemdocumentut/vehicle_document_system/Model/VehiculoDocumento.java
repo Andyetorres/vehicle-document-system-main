@@ -7,22 +7,19 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "vehiculo_documentos")
-@Getter 
-@Setter 
-@NoArgsConstructor 
-@AllArgsConstructor 
-@Builder
+@Getter @Setter 
+@NoArgsConstructor @AllArgsConstructor @Builder
 public class VehiculoDocumento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehiculo_id", nullable = false)
     private Vehiculo vehiculo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "documento_id", nullable = false)
     private Documento documento;
 
@@ -37,7 +34,7 @@ public class VehiculoDocumento {
              message = "Estado inválido. Use: Habilitado, Vencido o En Verificación")
     private String estado;
 
-    @Lob // Para archivos grandes
+    @Lob
     @Column(columnDefinition = "LONGBLOB")
     private byte[] documentoPdf;
 }

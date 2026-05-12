@@ -32,12 +32,16 @@ public class PersonaServiceImpl implements IPersonaService {
     @Override
     @Transactional
     public Persona crearPersona(Persona persona) {
+        // Guardamos la persona primero
         Persona nuevaPersona = personaRepo.save(persona);
 
+        // Si es Administrativo 'A', creamos el usuario obligatoriamente
         if ("A".equalsIgnoreCase(persona.getTipoPersona())) {
-            String loginGenerado = persona.getNombres().substring(0,1).toLowerCase() + 
-                                   persona.getApellidos().substring(0,1).toLowerCase() + 
-                                   persona.getIdentificacion();
+            
+            // REGLA DE NEMOTECNIA: Primera letra Nombre + Primera letra Apellido + ID
+            String loginGenerado = (persona.getNombres().substring(0,1) + 
+                                   persona.getApellidos().substring(0,1) + 
+                                   persona.getIdentificacion()).toUpperCase();
             
             UsuarioId idCompuesto = new UsuarioId();
             idCompuesto.setLogin(loginGenerado);
@@ -45,8 +49,10 @@ public class PersonaServiceImpl implements IPersonaService {
 
             Usuario nuevoUsuario = new Usuario();
             nuevoUsuario.setId(idCompuesto);
-            nuevoUsuario.setPassword("123"); 
-            nuevoUsuario.setApikey(UUID.randomUUID().toString());
+            
+            // Requerimiento: Password y APIKey automáticos
+            nuevoUsuario.setPassword(UUID.randomUUID().toString().substring(0, 8)); // Password aleatorio
+            nuevoUsuario.setApikey(UUID.randomUUID().toString()); // APIKey aleatorio
             
             usuarioRepo.save(nuevoUsuario);
         }

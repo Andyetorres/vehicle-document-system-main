@@ -12,16 +12,16 @@ import lombok.*;
 public class Usuario {
 
     @EmbeddedId
-    private UsuarioId id; // Esto contiene el login y el tipo de identificación
+    private UsuarioId id;
 
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
     private String apikey;
 
-    @Column(name = "id_persona") // Esto crea la columna que te faltaba
-    private Long idpersona; 
-    
-    // Si tienes una relación formal con la entidad Persona:
-    @ManyToOne
-    @JoinColumn(name = "id_persona", insertable = false, updatable = false)
+    @OneToOne
+    @MapsId("idPersona") // Mapea el idPersona del UsuarioId con la PK de Persona
+    @JoinColumn(name = "id_persona")
     private Persona persona;
 }
