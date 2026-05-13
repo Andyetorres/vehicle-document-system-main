@@ -5,12 +5,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "usuario")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Usuario {
-
     @EmbeddedId
     private UsuarioId id;
 
@@ -21,7 +17,7 @@ public class Usuario {
     private String apikey;
 
     @OneToOne
-    @MapsId("idPersona") // Mapea el idPersona del UsuarioId con la PK de Persona
+    @MapsId("idPersona") // Vincula el campo idPersona de la PK con la entidad Persona
     @JoinColumn(name = "id_persona")
     private Persona persona;
 }

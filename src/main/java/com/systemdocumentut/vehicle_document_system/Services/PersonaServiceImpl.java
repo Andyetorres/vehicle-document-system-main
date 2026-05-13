@@ -5,56 +5,55 @@ import com.systemdocumentut.vehicle_document_system.Model.Usuario;
 import com.systemdocumentut.vehicle_document_system.Model.UsuarioId;
 import com.systemdocumentut.vehicle_document_system.Repository.PersonaRepository;
 import com.systemdocumentut.vehicle_document_system.Repository.UsuarioRepository;
-import com.systemdocumentut.vehicle_document_system.Services.impl.IPersonaService; // Verifica que esta ruta sea correcta
+import com.systemdocumentut.vehicle_document_system.Services.impl.IPersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// IMPORTANTE: Estos son para que 'logger' funcione
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class PersonaServiceImpl implements IPersonaService {
 
-    // 1. Definimos el logger (esto quita el error de 'logger cannot be resolved')
     private static final Logger logger = LoggerFactory.getLogger(PersonaServiceImpl.class);
 
     @Autowired 
-    private PersonaRepository personaRepo; // Aquí lo llamaste personaRepo
+    private PersonaRepository personaRepo;
 
     @Autowired 
     private UsuarioRepository usuarioRepo;
 
+    // --- MÉTODOS DE CREACIÓN Y LISTADO ---
+
     @Override
     @Transactional
     public Persona crearPersona(Persona persona) {
-        // Guardamos la persona primero
         Persona nuevaPersona = personaRepo.save(persona);
 
-        // Si es Administrativo 'A', creamos el usuario obligatoriamente
-        if ("A".equalsIgnoreCase(persona.getTipoPersona())) {
-            
-            // REGLA DE NEMOTECNIA: Primera letra Nombre + Primera letra Apellido + ID
-            String loginGenerado = (persona.getNombres().substring(0,1) + 
-                                   persona.getApellidos().substring(0,1) + 
-                                   persona.getIdentificacion()).toUpperCase();
+        if ("A".equalsIgnoreCase(nuevaPersona.getTipoPersona())) {
+            String loginGenerado = (nuevaPersona.getNombres().substring(0, 1) + 
+                                   nuevaPersona.getApellidos().substring(0, 1) + 
+                                   nuevaPersona.getIdentificacion()).toUpperCase();
             
             UsuarioId idCompuesto = new UsuarioId();
             idCompuesto.setLogin(loginGenerado);
-            idCompuesto.setIdpersona(nuevaPersona.getId_persona());
+            idCompuesto.setIdPersona(nuevaPersona.getIdPersona()); 
 
             Usuario nuevoUsuario = new Usuario();
             nuevoUsuario.setId(idCompuesto);
-            
-            // Requerimiento: Password y APIKey automáticos
-            nuevoUsuario.setPassword(UUID.randomUUID().toString().substring(0, 8)); // Password aleatorio
-            nuevoUsuario.setApikey(UUID.randomUUID().toString()); // APIKey aleatorio
+            nuevoUsuario.setPersona(nuevaPersona);
+            nuevoUsuario.setPassword(UUID.randomUUID().toString().substring(0, 8)); 
+            nuevoUsuario.setApikey(UUID.randomUUID().toString());
             
             usuarioRepo.save(nuevoUsuario);
+            logger.info("Usuario creado automáticamente: {}", loginGenerado);
         }
         return nuevaPersona;
     }
@@ -65,30 +64,77 @@ public class PersonaServiceImpl implements IPersonaService {
     }
 
     @Override
+    public Optional<Persona> buscarPorId(Long id) {
+        return personaRepo.findById(id);
+    }
+
+    // --- MÉTODO QUE SOLUCIONA EL ERROR: actualizar(Long, Persona) ---
+
+    @Override
+    @Transactional
     public Persona actualizar(Long id, Persona datosNuevos) {
-        Persona p = personaRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
-        
-        p.setNombres(datosNuevos.getNombres());
-        p.setApellidos(datosNuevos.getApellidos());
-        p.setCorreoElectronico(datosNuevos.getCorreoElectronico());
-        
-        return personaRepo.save(p);
+        return personaRepo.findById(id)
+                .map(p -> {
+                    p.setNombres(datosNuevos.getNombres());
+                    p.setApellidos(datosNuevos.getApellidos());
+                    p.setCorreoElectronico(datosNuevos.getCorreoElectronico());
+                    p.setTipoPersona(datosNuevos.getTipoPersona());
+                    // Puedes añadir más campos según tu modelo Persona
+                    return personaRepo.save(p);
+                })
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada con ID: " + id));
+    }
+
+    // --- MÉTODOS DE SEGURIDAD Y USUARIO ---
+
+    @Override
+    @Transactional
+    public void actualizarPassword(String login, String newPassword) {
+        Usuario usuario = usuarioRepo.findAll().stream()
+                .filter(u -> u.getId().getLogin().equalsIgnoreCase(login))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No se encontró el usuario con login: " + login));
+
+        usuario.setPassword(newPassword);
+        usuarioRepo.save(usuario);
+        logger.info("Contraseña actualizada exitosamente para: {}", login);
     }
 
     @Override
+    @Transactional
+    public String regenerarApiKey(String login) {
+        Usuario usuario = usuarioRepo.findAll().stream()
+                .filter(u -> u.getId().getLogin().equalsIgnoreCase(login))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        String nuevaApiKey = UUID.randomUUID().toString();
+        usuario.setApikey(nuevaApiKey);
+        usuarioRepo.save(usuario);
+        return nuevaApiKey;
+    }
+
+    // --- OTROS MÉTODOS ---
+
+    @Override
+    public Map<String, Long> obtenerEstadisticas() {
+        List<Persona> todas = personaRepo.findAll();
+        Map<String, Long> stats = new HashMap<>();
+        
+        stats.put("total", (long) todas.size());
+        stats.put("administrativos", todas.stream().filter(p -> "A".equalsIgnoreCase(p.getTipoPersona())).count());
+        stats.put("conductores", todas.stream().filter(p -> "C".equalsIgnoreCase(p.getTipoPersona())).count());
+        
+        return stats;
+    }
+
+    @Override
+    @Transactional
     public boolean eliminar(Long id) { 
-        try {
-            // CORRECCIÓN: Antes decia 'personaRepository', pero tu variable es 'personaRepo'
-            if (personaRepo.existsById(id)) {
-                personaRepo.deleteById(id);
-                return true;
-            }
-            return false;
-        } catch (Exception e) {
-            // Ahora 'logger' ya existe arriba
-            logger.error("Error al eliminar: " + e.getMessage());
-            return false;
+        if (personaRepo.existsById(id)) {
+            personaRepo.deleteById(id);
+            return true;
         }
+        return false;
     }
 }

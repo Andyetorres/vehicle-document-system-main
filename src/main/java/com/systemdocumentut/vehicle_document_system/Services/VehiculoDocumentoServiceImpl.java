@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -58,14 +57,16 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
 
         try {
-            // Validación y limpieza del String Base64 (maneja el prefijo 'data:application/pdf;base64,')
-            String cleanBase64 = pdfBase64.contains(",") ? pdfBase64.split(",")[1] : pdfBase64;
-            byte[] pdfData = Base64.getDecoder().decode(cleanBase64.trim());
+            // Validación básica de contenido PDF
+            if (pdfBase64 == null || !pdfBase64.contains("JVBERi0")) {
+                 throw new RuntimeException("El contenido no parece ser un PDF válido.");
+            }
 
+            // Guardamos el String directamente (Sincronizado con el campo archivoPdf de la Entidad)
             VehiculoDocumento vd = VehiculoDocumento.builder()
                     .vehiculo(v)
                     .documento(d)
-                    .documentoPdf(pdfData) 
+                    .archivoPdf(pdfBase64) // Cambiado para coincidir con la entidad corregida
                     .fechaExpedicion(LocalDate.parse(fExp))
                     .fechaVencimiento(LocalDate.parse(fVen))
                     .estado("En Verificación")
@@ -73,8 +74,6 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
 
             return repo.save(vd);
             
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("El formato del archivo PDF (Base64) es inválido.");
         } catch (Exception e) {
             throw new RuntimeException("Error al procesar el documento: " + e.getMessage());
         }
@@ -89,8 +88,7 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
     @Override
     @Transactional(readOnly = true)
     public List<VehiculoDocumento> listarPorVehiculo(Long idVehiculo) {
-        // Se recomienda tener un método findByVehiculoId en el Repository para mayor eficiencia
-        // Si no existe, esta es la forma optimizada usando streams de lo que tenías:
+        // Optimización: Si no tienes el método en el repo, el filtro por stream es correcto
         return repo.findAll().stream()
                 .filter(vd -> vd.getVehiculo().getId().equals(idVehiculo))
                 .toList();

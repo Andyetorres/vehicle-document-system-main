@@ -23,5 +23,6 @@ public class VehiculoConductor {
     private LocalDate fechaAsociacion;
     
     // REQUERIMIENTO: Estados PO, EA, RO
-    private String estado; 
+    @Column(length = 2)
+    private String estado;
 }

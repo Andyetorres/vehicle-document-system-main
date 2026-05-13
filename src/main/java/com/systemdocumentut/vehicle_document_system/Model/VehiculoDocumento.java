@@ -35,6 +35,6 @@ public class VehiculoDocumento {
     private String estado;
 
     @Lob
-    @Column(columnDefinition = "LONGBLOB")
-    private byte[] documentoPdf;
+    @Column(name = "archivo_pdf", columnDefinition = "LONGTEXT") 
+    private String archivoPdf;
 }

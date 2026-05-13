@@ -9,6 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioId implements Serializable {
-    private String login;
-    private Long idPersona; // Este nombre debe coincidir con el atributo en Usuario
+    private String login; // Parte de la PK compuesta
+    private Long idPersona; // Parte de la PK compuesta
 }

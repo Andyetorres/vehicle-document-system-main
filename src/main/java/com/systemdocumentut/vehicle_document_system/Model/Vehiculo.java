@@ -10,8 +10,7 @@ import lombok.*;
  */
 @Entity
 @Table(name = "vehiculos", uniqueConstraints = {@UniqueConstraint(columnNames = "placa")})
-@Getter 
-@Setter 
+@Data // Genera Getters, Setters, toString, equals y hashCode
 @NoArgsConstructor 
 @AllArgsConstructor 
 @Builder
@@ -70,17 +69,18 @@ public class Vehiculo {
      * Automóvil: 3 letras + 3 números.
      * Motocicleta: 3 letras + 2 números + 1 letra.
      */
+    @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<VehiculoConductor> conductoresAsociados;
+
+    @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<VehiculoDocumento> documentosAsociados;
+
+    // --- TU VALIDACIÓN CUSTOM ---
     @AssertTrue(message = "El formato de la placa no coincide con el tipo de vehículo")
     public boolean isPlacaValida() {
         if (tipoVehiculo == null || placa == null) return false;
-        
-        if (tipoVehiculo.equals("Automóvil")) {
-            // 3 letras seguidas de 3 números
-            return placa.matches("^[A-Z]{3}\\d{3}$");
-        } else if (tipoVehiculo.equals("Motocicleta")) {
-            // 3 letras seguidas de 2 números y termina en letra
-            return placa.matches("^[A-Z]{3}\\d{2}[A-Z]{1}$");
-        }
+        if (tipoVehiculo.equals("Automóvil")) return placa.matches("^[A-Z]{3}\\d{3}$");
+        if (tipoVehiculo.equals("Motocicleta")) return placa.matches("^[A-Z]{3}\\d{2}[A-Z]{1}$");
         return false;
     }
 }
