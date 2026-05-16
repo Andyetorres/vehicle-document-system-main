@@ -3,7 +3,6 @@ package com.systemdocumentut.vehicle_document_system.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import java.util.List;
 
 @Entity

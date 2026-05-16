@@ -9,9 +9,13 @@ import java.util.List;
 @Repository
 public interface VehiculoConductorRepository extends JpaRepository<VehiculoConductor, Long> {
     
-    // Para buscar si ya existe la relación
     Optional<VehiculoConductor> findByVehiculoIdAndPersonaId(Long vehiculoId, Long personaId);
     
-    // Para los servicios públicos
     List<VehiculoConductor> findByVehiculoId(Long vehiculoId);
+
+    /**
+     * Requerimiento Técnico: Permite buscar todas las asignaciones vigentes de un conductor 
+     * para cambiar su estado a "RO - Restringido para Operar" de forma masiva si se le vence la licencia.
+     */
+    List<VehiculoConductor> findByPersonaId(Long personaId);
 }

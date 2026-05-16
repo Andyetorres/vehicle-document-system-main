@@ -35,12 +35,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/LaboratorioV1/**").permitAll() 
-                .requestMatchers(HttpMethod.GET, "/api/vehiculos/vencidos").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/conductores/operar").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/vehiculos/placa/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/personas/conteo").permitAll()
+                .requestMatchers("/auth/**").permitAll() // Endpoint de login libre
+                // Todos los endpoints de la API de rutas/trayectos quedan protegidos 
+                .requestMatchers("/api/rutas/**").authenticated() 
                 .anyRequest().authenticated()
             );
 
@@ -52,14 +49,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permitir orígenes comunes de desarrollo
-        configuration.setAllowedOrigins(Arrays.asList("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:3000"));
+        // Permite la conexión desde servidores de desarrollo de FrontEnd usuales (ej: Live Server o React) 
+        configuration.setAllowedOrigins(Arrays.asList("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:3000", "http://localhost:8080"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
-        // CORRECCIÓN CRÍTICA: Se añade "APIKey" a los headers permitidos
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "APIKey"));
-        
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -72,6 +67,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // Recuerda cambiar por BCryptPasswordEncoder si manejas contraseñas encriptadas de producción
         return NoOpPasswordEncoder.getInstance();
     }
 }

@@ -40,7 +40,7 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
                 .documento(d)
                 .fechaExpedicion(LocalDate.parse(fechaExp))
                 .fechaVencimiento(LocalDate.parse(fechaVen))
-                .estado("En Verificación") // Requerimiento: Estado inicial por defecto
+                .estado("En Verificación") 
                 .build();
 
         return repo.save(vd);
@@ -49,7 +49,6 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
     @Override
     @Transactional 
     public VehiculoDocumento guardarDocumentoConPdf(Long idVehiculo, Long idDoc, String pdfBase64, String fExp, String fVen) {
-        
         Vehiculo v = vehiculoRepo.findById(idVehiculo)
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         
@@ -57,16 +56,14 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
                 .orElseThrow(() -> new RuntimeException("Documento no encontrado"));
 
         try {
-            // Validación básica de contenido PDF
             if (pdfBase64 == null || !pdfBase64.contains("JVBERi0")) {
                  throw new RuntimeException("El contenido no parece ser un PDF válido.");
             }
 
-            // Guardamos el String directamente (Sincronizado con el campo archivoPdf de la Entidad)
             VehiculoDocumento vd = VehiculoDocumento.builder()
                     .vehiculo(v)
                     .documento(d)
-                    .archivoPdf(pdfBase64) // Cambiado para coincidir con la entidad corregida
+                    .archivoPdf(pdfBase64) 
                     .fechaExpedicion(LocalDate.parse(fExp))
                     .fechaVencimiento(LocalDate.parse(fVen))
                     .estado("En Verificación")
@@ -88,9 +85,27 @@ public class VehiculoDocumentoServiceImpl implements IVehiculoDocumentoService {
     @Override
     @Transactional(readOnly = true)
     public List<VehiculoDocumento> listarPorVehiculo(Long idVehiculo) {
-        // Optimización: Si no tienes el método en el repo, el filtro por stream es correcto
         return repo.findAll().stream()
                 .filter(vd -> vd.getVehiculo().getId().equals(idVehiculo))
                 .toList();
+    }
+
+    // --- NUEVAS IMPLEMENTACIONES (ENTREGA 3) ---
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VehiculoDocumento> listarDocumentosVehiculoExpirados() {
+        // Ejecuta la consulta basada en la fecha del sistema actual
+        return repo.findDocumentosExpirados(LocalDate.now());
+    }
+
+    @Override
+    @Transactional
+    public void marcarDocumentoComoVencido(Long vehiculoDocumentoId) {
+        VehiculoDocumento vd = repo.findById(vehiculoDocumentoId)
+                .orElseThrow(() -> new RuntimeException("Registro de documento de vehículo no encontrado con ID: " + vehiculoDocumentoId));
+        
+        vd.setEstado("VENCIDO"); // Requerimiento explícito: estado cambiado a VENCIDO
+        repo.save(vd);
     }
 }

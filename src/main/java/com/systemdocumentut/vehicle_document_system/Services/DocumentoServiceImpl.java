@@ -24,8 +24,6 @@ public class DocumentoServiceImpl implements IDocumentoService {
     @Override
     @Transactional
     public Documento guardar(Documento documento) {
-        // Aquí podrías agregar lógica para validar que los códigos 'A', 'M', 'AM' 
-        // lleguen correctamente antes de intentar el insert en DB
         validarCamposParametricos(documento);
         return documentoRepository.save(documento);
     }
@@ -45,8 +43,8 @@ public class DocumentoServiceImpl implements IDocumentoService {
             
             docExistente.setCodigo(nuevoDoc.getCodigo());
             docExistente.setNombre(nuevoDoc.getNombre());
-            docExistente.setAplicaA(nuevoDoc.getAplicaA()); // A, M o AM
-            docExistente.setObligatorio(nuevoDoc.getObligatorio()); // RA, RM o RR
+            docExistente.setAplicaA(nuevoDoc.getAplicaA()); 
+            docExistente.setObligatorio(nuevoDoc.getObligatorio()); 
             docExistente.setDescripcion(nuevoDoc.getDescripcion());
             
             return documentoRepository.save(docExistente);
@@ -62,16 +60,10 @@ public class DocumentoServiceImpl implements IDocumentoService {
         documentoRepository.deleteById(id);
     }
 
-    /**
-     * Validación de lógica de negocio para los campos restringidos 
-     * antes de que lleguen a la base de datos.
-     */
     private void validarCamposParametricos(Documento doc) {
-        // Validar Tipos de Vehículos (A, M, AM)
         if (!doc.getAplicaA().matches("^(A|M|AM)$")) {
             throw new IllegalArgumentException("Valor inválido para aplicaA. Use: A, M o AM");
         }
-        // Validar Obligatoriedad (RA, RM, RR)
         if (!doc.getObligatorio().matches("^(RA|RM|RR)$")) {
             throw new IllegalArgumentException("Valor inválido para obligatorio. Use: RA, RM o RR");
         }

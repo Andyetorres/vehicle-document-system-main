@@ -3,6 +3,7 @@ package com.systemdocumentut.vehicle_document_system.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "persona")
@@ -22,7 +23,6 @@ public class Persona {
 
     @NotBlank
     @Column(name = "tipo_identificacion", length = 2)
-    // Nota: El CHECK se define en el script SQL o vía columnDefinition
     private String tipoIdentificacion;
 
     @NotBlank
@@ -37,8 +37,16 @@ public class Persona {
     private String correoElectronico;
 
     @NotBlank
-    @Column(name = "tipo_persona", length = 1)
+    @Column(name = "tipo_persona", length = 1) // 'C' para Conductor, etc.
     private String tipoPersona;
+
+    // --- REQUERIMIENTO ENTREGA 3: Adición de campos para conductores ---
+    @Lob
+    @Column(name = "licencia_conduccion", columnDefinition = "LONGBLOB")
+    private byte[] licenciaConduccion; // Almacena el archivo BASE64 en formato binario BLOB
+
+    @Column(name = "fecha_vigencia_licencia")
+    private LocalDate fechaVigenciaLicencia;
 
     @OneToOne(mappedBy = "persona", cascade = CascadeType.ALL)
     private Usuario usuario;

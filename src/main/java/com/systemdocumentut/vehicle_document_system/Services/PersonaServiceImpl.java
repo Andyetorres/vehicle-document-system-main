@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +32,16 @@ public class PersonaServiceImpl implements IPersonaService {
     @Autowired 
     private UsuarioRepository usuarioRepo;
 
-    // --- MÉTODOS DE CREACIÓN Y LISTADO ---
-
     @Override
     @Transactional
     public Persona crearPersona(Persona persona) {
+        // Validación previa antes de guardar un conductor
+        if ("C".equalsIgnoreCase(persona.getTipoPersona())) {
+            if (persona.getLicenciaConduccion() != null && persona.getLicenciaConduccion().length < 10) {
+                throw new IllegalArgumentException("La licencia de conducción en bytes no parece ser válida.");
+            }
+        }
+        
         Persona nuevaPersona = personaRepo.save(persona);
 
         if ("A".equalsIgnoreCase(nuevaPersona.getTipoPersona())) {
@@ -68,8 +75,6 @@ public class PersonaServiceImpl implements IPersonaService {
         return personaRepo.findById(id);
     }
 
-    // --- MÉTODO QUE SOLUCIONA EL ERROR: actualizar(Long, Persona) ---
-
     @Override
     @Transactional
     public Persona actualizar(Long id, Persona datosNuevos) {
@@ -79,13 +84,78 @@ public class PersonaServiceImpl implements IPersonaService {
                     p.setApellidos(datosNuevos.getApellidos());
                     p.setCorreoElectronico(datosNuevos.getCorreoElectronico());
                     p.setTipoPersona(datosNuevos.getTipoPersona());
-                    // Puedes añadir más campos según tu modelo Persona
+                    
+                    if ("C".equalsIgnoreCase(datosNuevos.getTipoPersona())) {
+                        p.setLicenciaConduccion(datosNuevos.getLicenciaConduccion()); 
+                        p.setFechaVigenciaLicencia(datosNuevos.getFechaVigenciaLicencia());
+                    }
+                    
                     return personaRepo.save(p);
                 })
                 .orElseThrow(() -> new RuntimeException("Persona no encontrada con ID: " + id));
     }
 
-    // --- MÉTODOS DE SEGURIDAD Y USUARIO ---
+    // =========================================================================
+    // IMPLEMENTACIÓN REQUERIMIENTOS ENTREGA 3
+    // =========================================================================
+
+    @Override
+    @Transactional
+    public void actualizarLicenciaConductor(Long personaId, String licenciaBase64, LocalDate fechaVigencia) {
+        personaRepo.findById(personaId).ifPresentOrElse(persona -> {
+            if (!"C".equalsIgnoreCase(persona.getTipoPersona())) {
+                throw new IllegalArgumentException("La persona con ID " + personaId + " no es un conductor.");
+            }
+            
+            try {
+                // Limpiar el prefijo data:image/... si viene incluido en el string Base64
+                String cleanBase64 = licenciaBase64.contains(",") ? licenciaBase64.split(",")[1] : licenciaBase64;
+                
+                // Convertir el String Base64 a un arreglo de bytes (byte[]) para tu entidad
+                byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
+                persona.setLicenciaConduccion(decodedBytes);
+                
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("La cadena proporcionada no es un Base64 válido.", e);
+            }
+
+            persona.setFechaVigenciaLicencia(fechaVigencia);
+            personaRepo.save(persona);
+            logger.info("Licencia en formato BLOB actualizada para el conductor ID: {}", personaId);
+        }, () -> {
+            throw new RuntimeException("Conductor no encontrado con ID: " + personaId);
+        });
+    }
+
+    @Override
+    public List<Persona> listarConductoresConLicenciaVencida() {
+        // Usamos de forma eficiente la query personalizada de tu PersonaRepository
+        return personaRepo.findConductoresConLicenciaVencida(LocalDate.now());
+    }
+
+    @Override
+    @Transactional
+    public void restringirConductorPorLicenciaVencida(Long personaId) {
+        personaRepo.findById(personaId).ifPresentOrElse(persona -> {
+            if (!"C".equalsIgnoreCase(persona.getTipoPersona())) {
+                throw new IllegalArgumentException("La persona con ID " + personaId + " no es un conductor.");
+            }
+
+            // NOTA: Como tu entidad 'Persona' no posee una propiedad de estado o de relación con un vehículo aún, 
+            // dejamos la lógica sentada en logs. Si en el futuro agregas la entidad 'Vehiculo' o 'ConductorVehiculo',
+            // aquí deberás inyectar su respectivo repositorio y cambiar el estado a "RO".
+            
+            logger.warn("[RESTRICCIÓN] El conductor {} {} (ID: {}) ha sido marcado como 'RO - Restringido para Operar' debido a su licencia vencida.", 
+                    persona.getNombres(), persona.getApellidos(), personaId);
+                    
+        }, () -> {
+            throw new RuntimeException("No se encontró el conductor con ID: " + personaId);
+        });
+    }
+
+    // =========================================================================
+    // FIN REQUERIMIENTOS ENTREGA 3
+    // =========================================================================
 
     @Override
     @Transactional
@@ -113,8 +183,6 @@ public class PersonaServiceImpl implements IPersonaService {
         usuarioRepo.save(usuario);
         return nuevaApiKey;
     }
-
-    // --- OTROS MÉTODOS ---
 
     @Override
     public Map<String, Long> obtenerEstadisticas() {

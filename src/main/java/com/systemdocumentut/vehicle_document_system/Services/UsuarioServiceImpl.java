@@ -16,36 +16,27 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Autowired 
     private UsuarioRepository usuarioRepo;
 
-    /**
-     * SOLUCIÓN AL ERROR: Implementación del método faltante.
-     * Este método es crucial para validar el login en el Middleware.
-     */
     @Override
     public Optional<Usuario> buscarPorLogin(String login) {
-        // Accedemos al repositorio usando la propiedad del ID compuesto
         return usuarioRepo.findById_Login(login);
     }
 
-    // REQUERIMIENTO: PUT /api/usuarios/{login}/password
     @Override
     @Transactional
     public void cambiarPassword(String login, String newPassword) {
         Usuario usuario = usuarioRepo.findById_Login(login)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + login));
         
-        // El requerimiento pide recibir la nueva contraseña por el body
         usuario.setPassword(newPassword); 
         usuarioRepo.save(usuario);
     }
 
-    // REQUERIMIENTO: GET /api/usuarios/{login}/new-apikey
     @Override
     @Transactional
     public String regenerarApiKey(String login) {
         Usuario usuario = usuarioRepo.findById_Login(login)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + login));
         
-        // Generación automática de valor único
         String newKey = UUID.randomUUID().toString();
         usuario.setApikey(newKey);
         usuarioRepo.save(usuario);

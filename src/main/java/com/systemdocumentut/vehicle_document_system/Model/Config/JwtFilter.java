@@ -1,6 +1,5 @@
 package com.systemdocumentut.vehicle_document_system.Model.Config;
 
-import com.systemdocumentut.vehicle_document_system.Repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
@@ -17,18 +16,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
-/**
- * Filtro de seguridad encargado de validar el APIKey y el Token JWT 
- * para todas las peticiones privadas.
- */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
-    private UsuarioRepository usuarioRepo;
-
-    @Autowired
-    private JWTAuthtenticationConfig jwtAuthtenticationConfig;
+    private JWTAuthenticationConfig jwtAuthenticationConfig;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -36,43 +28,19 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
         String authHeader = request.getHeader("Authorization");
-        
-        // Requerimiento: Configuración del APIKey en la cabecera del servicio
-        String apiKeyHeader = request.getHeader("X-API-KEY"); 
-        if (apiKeyHeader == null) {
-            apiKeyHeader = request.getHeader("APIKey"); // Soporte para ambos nombres de cabecera
-        }
 
-        // 1. SERVICIOS PÚBLICOS (Lista Blanca)
-        // No requieren token ni APIKey según los requerimientos de la entrega
-        if (path.startsWith("/auth/") || 
-            path.contains("/public/") ||
-            path.contains("/vencidos") ||        // Consultar vehículos con documentos vencidos
-            path.contains("/operar") ||          // Consultar conductores que puedan operar
-            path.contains("/placa") ||           // Consultar vehículo por placa (detalle conductores/docs)
-            path.contains("/por-vencer") ||      // Consultar documentos por vencer con parámetro
-            path.contains("/conteo")) {          // Consultar total de personas agrupadas por tipo
-            
+        // 1. ENDPOINTS PÚBLICOS (Solo el login/autenticación)
+        if (path.startsWith("/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. VALIDACIÓN DE APIKEY (Para todos los servicios privados/administrativos)
-        // El APIKey debe existir en la base de datos asociada a un usuario
-        if (apiKeyHeader == null || !usuarioRepo.existsByApikey(apiKeyHeader)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"error\": \"Acceso denegado: APIKey inválida o ausente en la cabecera.\"}");
-            return;
-        }
-
-        // 3. VALIDACIÓN DE TOKEN JWT
+        // 2. VALIDACIÓN DEL TOKEN JWT (Obligatorio para los nuevos servicios de rutas y trayectos) 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
                 Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(jwtAuthtenticationConfig.getSecretKey())
+                        .setSigningKey(jwtAuthenticationConfig.getSecretKey())
                         .build()
                         .parseClaimsJws(token)
                         .getBody();
@@ -80,7 +48,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 String username = claims.getSubject();
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    // Establecer la autenticación en el contexto de Spring Security
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             username, null, Collections.emptyList());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -96,11 +63,10 @@ public class JwtFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\": \"Token inválido o expirado\", \"detalle\": \"" + e.getMessage() + "\"}");
             }
         } else {
-            // Requerimiento: Los servicios desarrollados deben estar configurados de forma segura con Token
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"error\": \"Acceso denegado: Token JWT ausente.\"}");
+            response.getWriter().write("{\"error\": \"Acceso denegado: Se requiere un Token JWT válido para consumir este servicio.\"}");
         }
     }
 }

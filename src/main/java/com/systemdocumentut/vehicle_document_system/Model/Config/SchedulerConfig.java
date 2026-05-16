@@ -1,4 +1,4 @@
-package com.systemdocumentut.vehicle_document_system.Model.Config; // Ajustado a tu paquete
+package com.systemdocumentut.vehicle_document_system.Model.Config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
@@ -7,7 +7,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @Configuration
 public class SchedulerConfig implements SchedulingConfigurer {
-    private final int POOL_SIZE = 10;
+    private final int POOL_SIZE = 5;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {

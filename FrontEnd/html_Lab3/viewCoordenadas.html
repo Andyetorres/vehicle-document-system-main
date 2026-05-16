@@ -2,12 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Laboratorio 3 - Mapa de Coordenadas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrega 3 - Visualizador de Rutas y Trayectos</title>
     <link rel="stylesheet" type="text/css" href="./style.css" />
     <script src="./index.js"></script>
 </head>
 <body>
-    <div id="map"></div>
+    <div id="app-container">
+        <div id="sidebar">
+            <h2>Visualizador de Rutas</h2>
+            
+            <div class="search-box">
+                <label for="codigoRuta">Código de Ruta:</label>
+                <input type="text" id="codigoRuta" placeholder="Ej: RUTA-001" value="RUTA-001">
+                <button onclick="buscarRuta()">Buscar Ruta</button>
+            </div>
+
+            <hr>
+
+            <h3>Itinerario de Paradas</h3>
+            <div id="lista-paradas">
+                <p class="placeholder-text">Ingresa un código de ruta para ver sus paradas...</p>
+            </div>
+        </div>
+
+        <div id="map"></div>
+    </div>
 
     <script 
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3otHIjATVlrMFn32WOapLNblx3HdWI0w&callback=initMap&v=weekly&loading=async" 

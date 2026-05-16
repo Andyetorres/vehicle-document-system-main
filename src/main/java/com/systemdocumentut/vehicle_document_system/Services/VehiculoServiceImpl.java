@@ -21,10 +21,6 @@ public class VehiculoServiceImpl implements IVehiculoService {
     @Autowired private PersonaRepository personaRepository;
     @Autowired private VehiculoConductorRepository vehiculoConductorRepository;
 
-    // ==========================================
-    // MÉTODOS CRUD BÁSICOS
-    // ==========================================
-
     @Override
     public List<VehiculoDTO> listarTodos() {
         return vehiculoRepository.findAll().stream()
@@ -69,10 +65,6 @@ public class VehiculoServiceImpl implements IVehiculoService {
         vehiculoRepository.deleteById(id);
     }
 
-    // ==========================================
-    // LÓGICA DE DOCUMENTOS
-    // ==========================================
-
     @Override
     @Transactional
     public VehiculoDTO crearVehiculoConDocumento(VehiculoDTO dto, Long idDocumentoBase) {
@@ -86,7 +78,7 @@ public class VehiculoServiceImpl implements IVehiculoService {
         VehiculoDocumento relacion = new VehiculoDocumento();
         relacion.setVehiculo(nuevoVehiculo);
         relacion.setDocumento(docMaestro);
-        relacion.setEstado("EA"); // Espera de Aprobación
+        relacion.setEstado("EA"); 
         relacion.setFechaExpedicion(LocalDate.now());
         relacion.setFechaVencimiento(LocalDate.now().plusYears(1));
         vehiculoDocumentoRepository.save(relacion);
@@ -135,10 +127,6 @@ public class VehiculoServiceImpl implements IVehiculoService {
         vehiculoDocumentoRepository.save(vd);
     }
 
-    // ==========================================
-    // LÓGICA DE CONDUCTORES
-    // ==========================================
-
     @Override
     @Transactional
     public void asociarConductor(Long vehiculoId, Long personaId) {
@@ -170,10 +158,6 @@ public class VehiculoServiceImpl implements IVehiculoService {
         vc.setEstado(nuevoEstado);
         vehiculoConductorRepository.save(vc);
     }
-
-    // ==========================================
-    // CONSULTAS Y BÚSQUEDAS
-    // ==========================================
 
     @Override
     public VehiculoDetalleDTO obtenerDetallePorPlaca(String placa) {
@@ -232,10 +216,6 @@ public class VehiculoServiceImpl implements IVehiculoService {
                 .filter(vd -> vd.getDocumento().getId().equals(idDocumento))
                 .map(vd -> mapToDTO(vd.getVehiculo())).collect(Collectors.toList());
     }
-
-    // ==========================================
-    // UTILS Y MAPPERS
-    // ==========================================
 
     private void validarReglasNegocio(VehiculoDTO dto) {
         if (dto.getPlaca() == null || dto.getPlaca().length() != 6) 

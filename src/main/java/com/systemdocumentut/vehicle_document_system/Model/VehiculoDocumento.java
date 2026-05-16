@@ -24,15 +24,18 @@ public class VehiculoDocumento {
     private Documento documento;
 
     @NotNull(message = "La fecha de expedición es obligatoria")
+    @Column(name = "fecha_expedicion")
     private LocalDate fechaExpedicion;
 
     @NotNull(message = "La fecha de vencimiento es obligatoria")
+    @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
     @NotBlank(message = "El estado es obligatorio")
-    @Pattern(regexp = "^(Habilitado|Vencido|En Verificación)$", 
-             message = "Estado inválido. Use: Habilitado, Vencido o En Verificación")
-    private String estado;
+    // Se modifica el Pattern para aceptar "VENCIDO" en mayúsculas exigido por el requerimiento
+    @Pattern(regexp = "^(Habilitado|VENCIDO|En Verificación)$", 
+             message = "Estado inválido. Use: Habilitado, VENCIDO o En Verificación")
+    private String estado; 
 
     @Lob
     @Column(name = "archivo_pdf", columnDefinition = "LONGTEXT") 

@@ -11,6 +11,17 @@ public interface IVehiculoDocumentoService {
     
     List<VehiculoDocumento> listarPorVehiculo(Long idVehiculo);
 
-    // Método solicitado para manejo de archivos PDF en Base64
     VehiculoDocumento guardarDocumentoConPdf(Long idVehiculo, Long idDoc, String pdfBase64, String fExp, String fVen);
+
+    // --- NUEVOS REQUERIMIENTOS: TAREAS PROGRAMADAS (ENTREGA 3) ---
+
+    /**
+     * Tarea programada (2 min): Busca todos los registros de documentos asociados a vehículos vencidos.
+     */
+    List<VehiculoDocumento> listarDocumentosVehiculoExpirados();
+
+    /**
+     * Tarea programada (2 min): Cambia el estado del documento asociado al vehículo a "VENCIDO".
+     */
+    void marcarDocumentoComoVencido(Long vehiculoDocumentoId);
 }

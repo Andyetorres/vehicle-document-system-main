@@ -12,17 +12,18 @@ public class VehiculoConductor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vehiculo")
     private Vehiculo vehiculo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
+    @Column(name = "fecha_asociacion")
     private LocalDate fechaAsociacion;
     
-    // REQUERIMIENTO: Estados PO, EA, RO
-    @Column(length = 2)
-    private String estado;
+    // REQUERIMIENTO: Cambia dinámicamente a "RO" a través de la Tarea Programada si la licencia vence.
+    @Column(length = 2, nullable = false)
+    private String estado; // PO (Puede Operar), RO (Restringido para Operar), EA (En Espera)
 }

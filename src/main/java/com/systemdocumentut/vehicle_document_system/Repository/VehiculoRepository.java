@@ -12,25 +12,17 @@ import java.util.List;
 @Repository
 public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
 
-    // Consultar vehículos con documentos vencidos
-    @Query("SELECT vd.vehiculo FROM VehiculoDocumento vd WHERE vd.estado = 'Vencido'")
+    /**
+     * CORREGIDO: Se cambia 'Vencido' por 'VENCIDO' para coincidir estricto con la tarea programada.
+     */
+    @Query("SELECT vd.vehiculo FROM VehiculoDocumento vd WHERE vd.estado = 'VENCIDO'")
     List<Vehiculo> findVehiculosVencidos();
 
-    // Consultar vehículos con documentos por vencer (parámetro de fecha)
     @Query("SELECT vd.vehiculo FROM VehiculoDocumento vd WHERE vd.fechaVencimiento <= :fechaLimite")
     List<Vehiculo> findByVencimientoProximo(@Param("fechaLimite") LocalDate fechaLimite);
-    /**
-     * Requerimiento: Buscar vehículo por número de placa.
-     * @param placa Número de placa único.
-     * @return El vehículo si existe.
-     */
+
     Optional<Vehiculo> findByPlaca(String placa);
 
-    /**
-     * Requerimiento: Buscar vehículos por tipo de vehículo (Automóvil/Motocicleta).
-     * @param tipoVehiculo Categoría del vehículo.
-     * @return Lista de vehículos que coinciden.
-     */
     List<Vehiculo> findByTipoVehiculo(String tipoVehiculo);
 
     @Query("SELECT vd.vehiculo FROM VehiculoDocumento vd WHERE vd.documento.id = :idDocumento")

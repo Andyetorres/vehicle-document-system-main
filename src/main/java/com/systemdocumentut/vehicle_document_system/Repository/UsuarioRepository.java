@@ -11,14 +11,11 @@ import java.util.Optional;
 @Repository("IUsuarioRepository")
 public interface UsuarioRepository extends JpaRepository<Usuario, UsuarioId> {
 
-    // 1. Mantenemos el que ya funcionaba para tu Login JWT
     Optional<Usuario> findById_Login(String login);
 
-    // 2. Corregimos el método del profe usando @Query para que no de error de "No property found"
     @Query("SELECT u FROM Usuario u WHERE u.id.login = :login")
     Usuario findByUsername(@Param("login") String login);
 
-    // IMPORTANTE: Aquí es donde estaba el error. Usamos JPQL para mapear a tus campos reales
     boolean existsByApikey(String apikey);
         
     @Query("SELECT u FROM Usuario u WHERE u.id.login = :login AND u.apikey = :apikey")

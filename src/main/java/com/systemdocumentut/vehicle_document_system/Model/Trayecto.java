@@ -1,43 +1,50 @@
 package com.systemdocumentut.vehicle_document_system.Model;
 
-import java.util.List;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "trayecto")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Trayecto {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Identificador de trayecto (Primary Key)
 
-    @ManyToOne
-    @JoinColumn(name = "id_persona")
-    private Persona conductor; // Solo tipo conductor
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_persona", nullable = false)
+    private Persona conductor; // Debe validarse en lógica que sea tipo conductor 'C'
 
-    @ManyToOne
-    @JoinColumn(name = "id_vehiculo")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_vehiculo", nullable = false)
     private Vehiculo vehiculo;
 
-    private String codigoRuta;
+    @NotBlank
+    @Column(name = "codigo_ruta", nullable = false)
+    private String codigoRuta; // Código que agrupa varios trayectos/paradas
 
-    // Paradas (Coordenadas)
-    private Double latInicial;
-    private Double lonInicial;
-    private Double latFinal;
-    private Double lonFinal;
-    
-    // Puedes usar una lista de Coordenadas para las 5 paradas intermedias
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<Coordenadas> paradasIntermedias;
+    @NotBlank
+    @Column(name = "ubicacion", nullable = false)
+    private String ubicacion; // Lugar de parada (ej: Conservatorio del Tolima)
+
+    @NotNull
+    @Column(name = "orden_parada", nullable = false)
+    private Integer ordenParada; // 0 = Inicial, mayor = Final, intermedios
+
+    // Coordenadas geográficas (pueden ser NULL inicialmente para la tarea programada de Google Maps)
+    @Column(name = "latitud")
+    private Double latitud;
+
+    @Column(name = "longitud")
+    private Double longitud;
+
+    @NotBlank
+    @Column(name = "login_usuario_registro", nullable = false)
+    private String loginUsuarioRegistro; // Login del usuario que registra el trayecto
 }

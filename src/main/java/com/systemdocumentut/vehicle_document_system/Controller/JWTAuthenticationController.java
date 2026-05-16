@@ -7,9 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.systemdocumentut.vehicle_document_system.Model.Config.JwtRequest;
 import com.systemdocumentut.vehicle_document_system.Model.Config.JwtResponse;
-import com.systemdocumentut.vehicle_document_system.Model.Config.JWTAuthtenticationConfig;
+import com.systemdocumentut.vehicle_document_system.Model.Config.JWTAuthenticationConfig;
 import com.systemdocumentut.vehicle_document_system.Repository.UsuarioRepository;
-import com.systemdocumentut.vehicle_document_system.Model.Usuario;
 
 import java.util.Map;
 
@@ -22,7 +21,7 @@ public class JWTAuthenticationController {
     private UsuarioRepository usuarioRepo;
 
     @Autowired
-    private JWTAuthtenticationConfig jwtAuthtenticationConfig;
+    private JWTAuthenticationConfig jwtAuthtenticationConfig;
 
     /**
      * POST /auth/authenticate

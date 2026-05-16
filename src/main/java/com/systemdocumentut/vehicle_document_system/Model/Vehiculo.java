@@ -3,14 +3,11 @@ package com.systemdocumentut.vehicle_document_system.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.util.List;
 
-/**
- * Entidad que representa un Vehículo.
- * Incluye validaciones de placa según el tipo de vehículo y restricciones de negocio.
- */
 @Entity
 @Table(name = "vehiculos", uniqueConstraints = {@UniqueConstraint(columnNames = "placa")})
-@Data // Genera Getters, Setters, toString, equals y hashCode
+@Data 
 @NoArgsConstructor 
 @AllArgsConstructor 
 @Builder
@@ -18,7 +15,7 @@ public class Vehiculo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Identificador de vehículo (Primary Key)
+    private Long id;
 
     @NotBlank(message = "El tipo de vehículo es obligatorio")
     @Pattern(regexp = "^(Automóvil|Motocicleta)$", message = "El tipo debe ser 'Automóvil' o 'Motocicleta'")
@@ -63,19 +60,12 @@ public class Vehiculo {
     @Column(nullable = false)
     private String linea;
 
-    /**
-     * Validación personalizada de la placa antes de persistir o actualizar.
-     * Implementa la lógica: 
-     * Automóvil: 3 letras + 3 números.
-     * Motocicleta: 3 letras + 2 números + 1 letra.
-     */
     @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private java.util.List<VehiculoConductor> conductoresAsociados;
+    private List<VehiculoConductor> conductoresAsociados;
 
     @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private java.util.List<VehiculoDocumento> documentosAsociados;
+    private List<VehiculoDocumento> documentosAsociados;
 
-    // --- TU VALIDACIÓN CUSTOM ---
     @AssertTrue(message = "El formato de la placa no coincide con el tipo de vehículo")
     public boolean isPlacaValida() {
         if (tipoVehiculo == null || placa == null) return false;

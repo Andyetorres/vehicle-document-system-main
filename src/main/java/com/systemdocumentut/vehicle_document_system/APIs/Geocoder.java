@@ -7,9 +7,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Component
 public class Geocoder {
     // Usamos el endpoint de Geocoding que es más preciso para direcciones
     private static final String GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
